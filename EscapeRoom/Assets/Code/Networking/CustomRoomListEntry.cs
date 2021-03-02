@@ -8,7 +8,7 @@ public class CustomRoomListEntry : MonoBehaviour
 {
     public Text RoomNameText;
     public Text RoomPlayersText;
-    public Button JoinRoomButton;
+    public UnityEngine.UI.Button JoinRoomButton;
 
     private string roomName;
 

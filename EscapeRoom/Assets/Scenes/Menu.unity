@@ -3223,7 +3223,7 @@ MonoBehaviour:
   StartGameButton: {fileID: 800069350}
   PlayerListEntryPrefab: {fileID: 195212, guid: 053879927f6901741accc3c896aa43c4,
     type: 3}
-  SceneNameToLoad: SampleScene
+  SceneNameToLoad: NetworkedScene
 --- !u!222 &1310044698
 CanvasRenderer:
   m_ObjectHideFlags: 0

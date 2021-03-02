@@ -12,7 +12,7 @@ public class CustomPlayerListEntry : MonoBehaviour
     public Text PlayerNameText;
 
     public Image PlayerColorImage;
-    public Button PlayerReadyButton;
+    public UnityEngine.UI.Button PlayerReadyButton;
     public Image PlayerReadyImage;
 
     private int ownerId;
