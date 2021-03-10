@@ -15,14 +15,15 @@ public class PuzzleManager : MonoBehaviour
     public struct PlayablePuzzle
     {
         public string PuzzleName;
-        public UnityEvent PuzzleEvent;
+        public UnityEvent StartPuzzleAsPlayer;
+        public UnityEvent StartPuzzleAsHelper;
     }
 
     public void HostStartNextPuzzle()
     {
         QuizzedPlayer++;
         if (QuizzedPlayer == PhotonNetwork.PlayerList.Length) { QuizzedPlayer = 0; }
-        
+
         GetComponent<PhotonView>().RPC("StartPuzzle", RpcTarget.AllViaServer,Puzzles[Random.Range(0,Puzzles.Length)].PuzzleName,QuizzedPlayer);
     }
 
@@ -35,11 +36,12 @@ public class PuzzleManager : MonoBehaviour
         Debug.Log("Client ID: " + PhotonNetwork.LocalPlayer.UserId);
 
         //Start the selected puzzle
+        PlayablePuzzle SelectedPuzzle = new PlayablePuzzle();
         foreach(PlayablePuzzle PP in Puzzles)
         {
             if(PP.PuzzleName == PuzzleName)
             {
-                PP.PuzzleEvent.Invoke();
+                SelectedPuzzle = PP;
                 break;
             }
         }
@@ -49,11 +51,13 @@ public class PuzzleManager : MonoBehaviour
         {
             Camera.main.transform.position = Hotseat.position;
             Camera.main.transform.rotation = Hotseat.rotation;
+            SelectedPuzzle.StartPuzzleAsPlayer.Invoke();
         }
         else
         {
             Camera.main.transform.position = HintSeat.position;
             Camera.main.transform.rotation = HintSeat.rotation;
+            SelectedPuzzle.StartPuzzleAsHelper.Invoke();
         }
     }
 }
