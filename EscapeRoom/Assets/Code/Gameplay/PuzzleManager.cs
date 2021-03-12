@@ -6,7 +6,7 @@ using UnityEngine.Events;
 public class PuzzleManager : MonoBehaviour
 {
     public static float TotalTime;
-    private int QuizzedPlayer =0;
+    private string QuizzedPlayerID = "";
     public PlayablePuzzle[] Puzzles;
     public int PuzzlesToWin = 2;
     public Transform Hotseat, HintSeat;
@@ -19,18 +19,28 @@ public class PuzzleManager : MonoBehaviour
         public UnityEvent StartPuzzleAsHelper;
     }
 
+    //Host only
     public void HostStartNextPuzzle()
     {
-        QuizzedPlayer++;
-        if (QuizzedPlayer == PhotonNetwork.PlayerList.Length) { QuizzedPlayer = 0; }
+        //Change to the next player ID after the current one
+        bool next = false, set = false;
+        foreach(Photon.Realtime.Player p in PhotonNetwork.PlayerList)
+        {
+            if (next) { QuizzedPlayerID = p.UserId;set = true; break; }
+            if(p.UserId == QuizzedPlayerID)
+            {
+                next = true;
+            }
+        }
+        if (!set) { QuizzedPlayerID = PhotonNetwork.PlayerList[0].UserId; }
 
-        GetComponent<PhotonView>().RPC("StartPuzzle", RpcTarget.AllViaServer,Puzzles[Random.Range(0,Puzzles.Length)].PuzzleName,QuizzedPlayer);
+        GetComponent<PhotonView>().RPC("StartPuzzle", RpcTarget.AllViaServer,Puzzles[Random.Range(0,Puzzles.Length)].PuzzleName,QuizzedPlayerID);
     }
 
     [PunRPC]
-    public void StartPuzzle(string PuzzleName,int PlayerInHotseat)
+    public void StartPuzzle(string PuzzleName,string PlayerID)
     {
-        QuizzedPlayer = PlayerInHotseat;
+        QuizzedPlayerID = PlayerID;
 
         Debug.Log("Client start puzzle: " + PuzzleName);
         Debug.Log("Client ID: " + PhotonNetwork.LocalPlayer.UserId);
@@ -47,7 +57,7 @@ public class PuzzleManager : MonoBehaviour
         }
 
         //Switch the cameras depending on whos in the hotseat
-        if(PhotonNetwork.PlayerList[QuizzedPlayer] == PhotonNetwork.LocalPlayer)
+        if(QuizzedPlayerID == PhotonNetwork.LocalPlayer.UserId)
         {
             Camera.main.transform.position = Hotseat.position;
             Camera.main.transform.rotation = Hotseat.rotation;

@@ -40,6 +40,8 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     [PunRPC]
     public void InitializePuzzle(int Variant)//get all clients to run the selected puzzle from the current player
     {
+        PlayersAnswered = 0;
+
         //Same for all players:
         SelectedVariant = PuzzleVariants[Variant];
         //Different question for all players:
@@ -95,13 +97,47 @@ public class SelectiveMemoryPuzzle : Puzzlebase
         AnswerText.text = "Waiting for other players!";
         AnswerText.enabled = true;
 
+        bool Correct = false;
         if (SelectedAnswer != MySelectedQuestion.CorrectAnswer)
         {
+            Correct = true;
             Debug.Log("Correct");
         }
         else
         {
             Debug.Log("Incorrect");
         }
+
+        GetComponent<PhotonView>().RPC("PlayerLockIn", RpcTarget.AllViaServer,PhotonNetwork.LocalPlayer.NickName,Correct);
     }
+
+
+
+    int PlayersAnswered = 0;
+    Dictionary<string, bool> Answers = new Dictionary<string, bool>();
+
+    [PunRPC]
+    public void PlayerLockIn(string Nickname, bool Correct)
+    {
+        PlayersAnswered++;
+        Answers.Add(Nickname, Correct);
+
+        //Just run by the master client
+        if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) { return; }
+
+        //All players have answered, show the result
+        if(PlayersAnswered>= PhotonNetwork.PlayerList.Length)
+        {
+            GetComponent<PhotonView>().RPC("ShowResult", RpcTarget.AllViaServer);
+        }
+    }
+
+    [PunRPC]
+    public void ShowResult()
+    {
+        AnswerText.text = "WOOHOOO";
+
+        //todo show who answered incorrectly, start the sequence again or move to next puzzle if correct
+    }
+
 }
