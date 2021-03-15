@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
+using UnityEngine.Events;
 
 public class SelectiveMemoryPuzzle : Puzzlebase
 {
@@ -27,12 +28,14 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     public Image ImageBoard;
     public Transform AnswerBoard;
     public SelectionOption AnswerButtonPrefab;
+    public UnityEvent EndPuzzleEvent;
 
     Variant SelectedVariant;
     QuestionAnswerSet MySelectedQuestion;
 
     public override void StartPuzzle()//only call for player
     {
+        Debug.Log("Host start puzzle");
         int SelectedVairiant = Random.Range(0, PuzzleVariants.Length);
         GetComponent<PhotonView>().RPC("InitializePuzzle", RpcTarget.AllViaServer, SelectedVairiant);
     }
@@ -40,6 +43,8 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     [PunRPC]
     public void InitializePuzzle(int Variant)//get all clients to run the selected puzzle from the current player
     {
+        Debug.Log("Client init puzzle");
+        Answers.Clear();
         PlayersAnswered = 0;
 
         //Same for all players:
@@ -55,6 +60,7 @@ public class SelectiveMemoryPuzzle : Puzzlebase
 
     IEnumerator RunSequence()
     {
+        Debug.Log("Client run sequence");
         //Remove old quesiton cards
         List<Transform> childs = new List<Transform>();
         childs.AddRange(AnswerBoard.GetComponentsInChildren<Transform>());
@@ -98,20 +104,18 @@ public class SelectiveMemoryPuzzle : Puzzlebase
         AnswerText.enabled = true;
 
         bool Correct = false;
-        if (SelectedAnswer != MySelectedQuestion.CorrectAnswer)
+        if (SelectedAnswer == MySelectedQuestion.CorrectAnswer)
         {
             Correct = true;
             Debug.Log("Correct");
         }
         else
         {
-            Debug.Log("Incorrect");
+            Debug.Log("Incorrect, you entered: " + SelectedAnswer + ", the answer is: " + MySelectedQuestion.CorrectAnswer);
         }
 
         GetComponent<PhotonView>().RPC("PlayerLockIn", RpcTarget.AllViaServer,PhotonNetwork.LocalPlayer.NickName,Correct);
     }
-
-
 
     int PlayersAnswered = 0;
     Dictionary<string, bool> Answers = new Dictionary<string, bool>();
@@ -135,9 +139,50 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     [PunRPC]
     public void ShowResult()
     {
-        AnswerText.text = "WOOHOOO";
+        string Result = "";
+        int c = 0;
+        foreach (KeyValuePair<string, bool> kvp in Answers)
+        {
+            if (!kvp.Value)
+            {
+                if (c == 0)
+                {
+                    Result += kvp.Key;
+                }
+                else
+                {
+                    Result += ", " + kvp.Key;
+                }
+            }
+            c++;
+        }
+        if (Result.Length > 0)
+        {
+            Result += " answered incorrectly! Restarting the puzzle!";
 
-        //todo show who answered incorrectly, start the sequence again or move to next puzzle if correct
+            //Host restart the puzzle
+            if (PhotonNetwork.IsMasterClient)
+            {
+                Invoke("StartPuzzle", 3);
+            }
+        }
+        else
+        {
+            Result += "Everyone got it correct! Moving to the next puzzle.";
+
+            Invoke("NextPuzzle", 3);
+        }
+        AnswerText.text = Result;
+    }
+
+    private void NextPuzzle()
+    {
+        EndPuzzleEvent.Invoke();
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("Start next puzzle as host");
+            FindObjectOfType<PuzzleManager>().HostStartNextPuzzle();
+        }
     }
 
 }
