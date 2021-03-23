@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 public class SelectiveMemoryPuzzle : Puzzlebase
 {
@@ -20,11 +21,12 @@ public class SelectiveMemoryPuzzle : Puzzlebase
         public string Question;
         public string[] AnswerOptions;
         public string CorrectAnswer;
+        public string Clue;
     }
 
     public Variant[] PuzzleVariants;
 
-    public Text QuestionText, AnswerText;
+    public Text QuestionText, AnswerText,ClueQuestiontext,ClueText;
     public Image ImageBoard;
     public Transform AnswerBoard;
     public SelectionOption AnswerButtonPrefab;
@@ -33,26 +35,50 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     Variant SelectedVariant;
     QuestionAnswerSet MySelectedQuestion;
 
+    void Update()
+    {
+        if (EventSystem.current)
+        {
+            if (EventSystem.current.currentSelectedGameObject)
+            {
+                Debug.Log("Over: " + EventSystem.current.currentSelectedGameObject.name);
+            }
+        }
+
+        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //if (Physics.Raycast(ray, out RaycastHit hit))
+        //{
+        //    Debug.Log(hit.transform.name);
+        //}
+    }
+
     public override void StartPuzzle()//only call for player
     {
-        Debug.Log("Host start puzzle");
-        int SelectedVairiant = Random.Range(0, PuzzleVariants.Length);
-        GetComponent<PhotonView>().RPC("InitializePuzzle", RpcTarget.AllViaServer, SelectedVairiant);
+        if (PhotonNetwork.LocalPlayer.ActorNumber != PuzzleManager.QuizzedPlayerNumber)
+        {
+            return;
+        }
+
+        Debug.Log("start puzzle");
+        int SelectedVairiantNumber = Random.Range(0, PuzzleVariants.Length);
+        int Question = Random.Range(0, PuzzleVariants[SelectedVairiantNumber].SeqeunceQuestions.Length);
+
+        PhotonView.Get(this).RPC("InitializePuzzle", RpcTarget.AllViaServer, SelectedVairiantNumber, Question);
     }
 
     [PunRPC]
-    public void InitializePuzzle(int Variant)//get all clients to run the selected puzzle from the current player
+    public void InitializePuzzle(int Variant,int Question)//get all clients to run the selected puzzle from the current player
     {
         Debug.Log("Client init puzzle");
-        Answers.Clear();
-        PlayersAnswered = 0;
 
         //Same for all players:
         SelectedVariant = PuzzleVariants[Variant];
         //Different question for all players:
-        MySelectedQuestion = SelectedVariant.SeqeunceQuestions[Random.Range(0, SelectedVariant.SeqeunceQuestions.Length)];
+        MySelectedQuestion = SelectedVariant.SeqeunceQuestions[Question];
 
         QuestionText.text = MySelectedQuestion.Question;
+        ClueQuestiontext.text = MySelectedQuestion.Question;
+        ClueText.text = MySelectedQuestion.Clue;
 
         //Start sequence
         StartCoroutine(RunSequence());
@@ -99,8 +125,10 @@ public class SelectiveMemoryPuzzle : Puzzlebase
 
     public void CheckAnswer(string SelectedAnswer)
     {
+        if(PhotonNetwork.LocalPlayer.ActorNumber != PuzzleManager.QuizzedPlayerNumber) { return; }
+
         AnswerBoard.gameObject.SetActive(false);
-        AnswerText.text = "Waiting for other players!";
+        AnswerText.text = "";
         AnswerText.enabled = true;
 
         bool Correct = false;
@@ -114,49 +142,15 @@ public class SelectiveMemoryPuzzle : Puzzlebase
             Debug.Log("Incorrect, you entered: " + SelectedAnswer + ", the answer is: " + MySelectedQuestion.CorrectAnswer);
         }
 
-        GetComponent<PhotonView>().RPC("PlayerLockIn", RpcTarget.AllViaServer,PhotonNetwork.LocalPlayer.NickName,Correct);
+        GetComponentInParent<PhotonView>().RPC("ShowResult", RpcTarget.AllViaServer,PhotonNetwork.LocalPlayer.NickName,Correct);
     }
 
-    int PlayersAnswered = 0;
-    Dictionary<string, bool> Answers = new Dictionary<string, bool>();
 
     [PunRPC]
-    public void PlayerLockIn(string Nickname, bool Correct)
+    public void ShowResult(string NickName,bool Correct)
     {
-        PlayersAnswered++;
-        Answers.Add(Nickname, Correct);
-
-        //Just run by the master client
-        if (PhotonNetwork.MasterClient != PhotonNetwork.LocalPlayer) { return; }
-
-        //All players have answered, show the result
-        if(PlayersAnswered>= PhotonNetwork.PlayerList.Length)
-        {
-            GetComponent<PhotonView>().RPC("ShowResult", RpcTarget.AllViaServer);
-        }
-    }
-
-    [PunRPC]
-    public void ShowResult()
-    {
-        string Result = "";
-        int c = 0;
-        foreach (KeyValuePair<string, bool> kvp in Answers)
-        {
-            if (!kvp.Value)
-            {
-                if (c == 0)
-                {
-                    Result += kvp.Key;
-                }
-                else
-                {
-                    Result += ", " + kvp.Key;
-                }
-            }
-            c++;
-        }
-        if (Result.Length > 0)
+        string Result = NickName;
+        if (!Correct)
         {
             Result += " answered incorrectly! Restarting the puzzle!";
 
@@ -168,21 +162,20 @@ public class SelectiveMemoryPuzzle : Puzzlebase
         }
         else
         {
-            Result += "Everyone got it correct! Moving to the next puzzle.";
+            Result += " got it correct! Puzzle complete!";
 
-            Invoke("NextPuzzle", 3);
+            Invoke("PassTheBox", 3);
         }
         AnswerText.text = Result;
     }
 
-    private void NextPuzzle()
+    private void PassTheBox()
     {
         EndPuzzleEvent.Invoke();
         if (PhotonNetwork.IsMasterClient)
         {
-            Debug.Log("Start next puzzle as host");
-            FindObjectOfType<PuzzleManager>().HostStartNextPuzzle();
+            Debug.Log("Pass the box!");
+            FindObjectOfType<PuzzleManager>().HostPassTheBox();
         }
     }
-
 }

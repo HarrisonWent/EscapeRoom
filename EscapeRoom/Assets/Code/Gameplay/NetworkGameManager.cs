@@ -134,7 +134,7 @@ public class NetworkGameManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             Debug.Log("Start as host");
-            FindObjectOfType<PuzzleManager>().HostStartNextPuzzle();
+            FindObjectOfType<PuzzleManager>().HostPassTheBox();
         }
         else
         {

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class RainbowTilesButton : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class RainbowTilesButton : MonoBehaviour
 
     private void Start()
     {
-        RT = this.transform.GetComponentInParent<RainbowTiles>();
+        RT = transform.GetComponentInParent<RainbowTiles>();
         if (gameObject.tag != "Check") 
         {
             CurrentColour = Random.Range(0, 4);
@@ -18,21 +19,12 @@ public class RainbowTilesButton : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (CurrentColour > 3)
-        {
-            CurrentColour = 0;
-            RT.CurrentAttempt[ButtonID] = CurrentColour;
-            ChangeColour();
-        }
-        
-
-    }
-
     private void OnMouseOver() 
     {
-       
+        if (PhotonNetwork.LocalPlayer.ActorNumber != PuzzleManager.QuizzedPlayerNumber)
+        {
+            return;
+        }
 
         if (Input.GetMouseButtonDown(0)) 
         {
@@ -42,30 +34,35 @@ public class RainbowTilesButton : MonoBehaviour
                 RT.CheckAttempt();
                 return;
             }
+
             CurrentColour++;
-            RT.CurrentAttempt[ButtonID] = CurrentColour;
-           
+
+            if (CurrentColour > 3)
+            {
+                CurrentColour = 0;
+            }            
+
             ChangeColour();
         }
-
-        
     }
 
     void ChangeColour()
     {
+        RT.CurrentAttempt[ButtonID] = CurrentColour;
+
         switch (CurrentColour)
         {
             case 0:
-                this.gameObject.GetComponent<MeshRenderer>().material = Colours[0];
+                gameObject.GetComponent<MeshRenderer>().material = Colours[0];
                 break;
             case 1:
-                this.gameObject.GetComponent<MeshRenderer>().material = Colours[1];
+                gameObject.GetComponent<MeshRenderer>().material = Colours[1];
                 break;
             case 2:
-                this.gameObject.GetComponent<MeshRenderer>().material = Colours[2];
+                gameObject.GetComponent<MeshRenderer>().material = Colours[2];
                 break;
             case 3:
-                this.gameObject.GetComponent<MeshRenderer>().material = Colours[3];
+                gameObject.GetComponent<MeshRenderer>().material = Colours[3];
                 break;
         }
     }
