@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class SimonButton : MonoBehaviour
 {
@@ -9,16 +10,20 @@ public class SimonButton : MonoBehaviour
 
     void Start()
     {
-        SimonObject = transform.parent.gameObject.GetComponent<SimonSays>();
+        SimonObject = GetComponentInParent<SimonSays>();
     }
 
 
     private void OnMouseOver()
     {
+        if (PhotonNetwork.LocalPlayer.ActorNumber != PuzzleManager.QuizzedPlayerNumber)
+        {
+            return;
+        }
+
         if (Input.GetMouseButtonDown(0)) 
         {
-            SimonObject.CurrentAttempt += ButtonID.ToString();
-            SimonObject.NumberOfInputs++;
+            SimonObject.CheckStep(char.Parse(ButtonID.ToString()));
         }
     }
 }

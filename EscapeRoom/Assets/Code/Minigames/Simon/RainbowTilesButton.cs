@@ -8,6 +8,7 @@ public class RainbowTilesButton : MonoBehaviour
     private RainbowTiles RT;
     public int ButtonID, CurrentColour;
     public Material[] Colours;
+    public AudioSource ClickSound;
 
     private void Start()
     {
@@ -43,6 +44,8 @@ public class RainbowTilesButton : MonoBehaviour
             }            
 
             ChangeColour();
+
+            ClickSound.Play();
         }
     }
 

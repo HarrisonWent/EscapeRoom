@@ -31,26 +31,27 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     public Transform AnswerBoard;
     public SelectionOption AnswerButtonPrefab;
     public UnityEvent EndPuzzleEvent;
+    public AudioSource ClickButton,MemorySequence;
 
     Variant SelectedVariant;
     QuestionAnswerSet MySelectedQuestion;
 
-    void Update()
-    {
-        if (EventSystem.current)
-        {
-            if (EventSystem.current.currentSelectedGameObject)
-            {
-                Debug.Log("Over: " + EventSystem.current.currentSelectedGameObject.name);
-            }
-        }
+    //void Update()
+    //{
+    //    if (EventSystem.current)
+    //    {
+    //        if (EventSystem.current.currentSelectedGameObject)
+    //        {
+    //            Debug.Log("Over: " + EventSystem.current.currentSelectedGameObject.name);
+    //        }
+    //    }
 
-        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //if (Physics.Raycast(ray, out RaycastHit hit))
-        //{
-        //    Debug.Log(hit.transform.name);
-        //}
-    }
+    //    //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+    //    //if (Physics.Raycast(ray, out RaycastHit hit))
+    //    //{
+    //    //    Debug.Log(hit.transform.name);
+    //    //}
+    //}
 
     public override void StartPuzzle()//only call for player
     {
@@ -108,6 +109,7 @@ public class SelectiveMemoryPuzzle : Puzzlebase
         foreach (Sprite s in SelectedVariant.Images)
         {
             ImageBoard.sprite = s;
+            MemorySequence.Play();
             yield return WSF;
         }
 
@@ -126,6 +128,8 @@ public class SelectiveMemoryPuzzle : Puzzlebase
     public void CheckAnswer(string SelectedAnswer)
     {
         if(PhotonNetwork.LocalPlayer.ActorNumber != PuzzleManager.QuizzedPlayerNumber) { return; }
+
+        ClickButton.Play();
 
         AnswerBoard.gameObject.SetActive(false);
         AnswerText.text = "";

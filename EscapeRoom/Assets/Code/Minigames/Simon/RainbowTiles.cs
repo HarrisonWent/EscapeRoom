@@ -37,12 +37,12 @@ public class RainbowTiles : MonoBehaviour
             solution += RandomID.ToString();
         }
 
-        PhotonView.Get(this).RPC("Setup", RpcTarget.AllViaServer, solution);
+        PhotonView.Get(this).RPC("SetupRainbowTiles", RpcTarget.AllViaServer, solution);
     }
 
     //Set the same solution for all players
     [PunRPC]
-    public void Setup(string Solution)
+    public void SetupRainbowTiles(string Solution)
     {
         CurrentSolution = Solution;
 
@@ -70,12 +70,12 @@ public class RainbowTiles : MonoBehaviour
         if (CurrentAttemptString == CurrentSolution) 
         {
             Debug.Log("Correct");
-            PhotonView.Get(this).RPC("CompletePuzzleAllClients", RpcTarget.AllViaServer);
+            PhotonView.Get(this).RPC("CompletePuzzleAllClients_RainbowTiles", RpcTarget.AllViaServer);
         }
     }
 
     [PunRPC]
-    public void CompletePuzzleAllClients()
+    public void CompletePuzzleAllClients_RainbowTiles()
     {
         CompleteObject.GetComponent<MeshRenderer>().material = Green;
         Invoke("PassTheBox", 1);
