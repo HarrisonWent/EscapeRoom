@@ -92,12 +92,14 @@ public class PuzzleManager : MonoBehaviour
         if (QuizzedPlayerNumber == PhotonNetwork.LocalPlayer.ActorNumber)
         {
             Debug.Log("Quizzed player");
+            FindObjectOfType<BoxModeSwitch>().SwapBox(true);
             Camera.main.cullingMask = PuzzleMask;
             HelpText.text = "Use WASD keys to rotate. Press 'R' to roll the box.";
         }
         else
         {
             Debug.Log("Helping player");
+            FindObjectOfType<BoxModeSwitch>().SwapBox(false);
             Camera.main.cullingMask = ClueMask;
             HelpText.text = "You are helping the player. They control the box!";
         }

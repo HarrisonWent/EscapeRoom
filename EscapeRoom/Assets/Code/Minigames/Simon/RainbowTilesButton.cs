@@ -10,8 +10,10 @@ public class RainbowTilesButton : MonoBehaviour
     public Material[] Colours;
     public AudioSource ClickSound;
 
+    private Vector3 startscale;
     private void Start()
     {
+        startscale = transform.localScale;
         RT = transform.GetComponentInParent<RainbowTiles>();
         if (gameObject.tag != "Check") 
         {
@@ -44,9 +46,31 @@ public class RainbowTilesButton : MonoBehaviour
             }            
 
             ChangeColour();
-
+            StartCoroutine(QuickScale());
             ClickSound.Play();
         }
+    }
+
+    bool animating = false;
+    IEnumerator QuickScale()
+    {
+        if (animating) { yield break; }
+
+        animating = true;
+
+        while(transform.localScale.magnitude>0.1f)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.zero, 5 * Time.deltaTime);
+            yield return 0;
+        }
+
+        while (transform.localScale.magnitude < startscale.magnitude)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, startscale + (Vector3.one*0.1f), 5 * Time.deltaTime);
+            yield return 0;
+        }
+
+        animating = false;
     }
 
     void ChangeColour()

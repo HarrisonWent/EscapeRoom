@@ -122,7 +122,7 @@ public class NetworkGameManager : MonoBehaviourPunCallbacks
 
     #endregion
 
-
+    public GameObject HelpBoard, HelpCamera;
     // called by OnCountdownTimerIsExpired() when the timer ended
     private void StartGame()
     {
@@ -130,6 +130,13 @@ public class NetworkGameManager : MonoBehaviourPunCallbacks
 
         //PhotonNetwork.CurrentRoom.PlayerCount) * PhotonNetwork.LocalPlayer.GetPlayerNumber();
         // spawn players here PhotonNetwork.Instantiate("Spaceship", position, rotation, 0);      // avoid this call on rejoin (ship was network instantiated before)
+
+        //If singleplayer spawn some help
+        if(PhotonNetwork.PlayerList.Length == 1)
+        {
+            HelpBoard.SetActive(true);
+            HelpCamera.SetActive(true);
+        }
 
         if (PhotonNetwork.IsMasterClient)
         {
