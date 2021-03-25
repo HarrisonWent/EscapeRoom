@@ -26,13 +26,21 @@ public class PuzzleManager : MonoBehaviour
 
     public LayerMask PuzzleMask;
     public LayerMask ClueMask;
-
+    public int PuzzlesComplete = 0, PuzzlesToComplete = 5;//puzzles to complete is 1 more than the actual amount of puzzles as it is called at the start of the game
     //Host only
     public void HostPassTheBox()//todo call this when the box is rotated and detect which puzzle is being viewed
     {        
         if(!SpawnedBox)
         {
             SpawnedBox = PhotonNetwork.Instantiate(PuzzleBox.name, PuzzleBoxSpawnTransform.position, PuzzleBoxSpawnTransform.rotation);
+        }
+
+        //Check for game over
+        PuzzlesComplete++;
+        if (PuzzlesComplete == PuzzlesToComplete)
+        {
+            GetComponent<PhotonView>().RPC("GameOver", RpcTarget.AllViaServer);
+            return;
         }
 
         //Change to the next player ID after the current one
@@ -56,9 +64,6 @@ public class PuzzleManager : MonoBehaviour
             Debug.Log("Not set");
             QuizzedPlayerNumber = PhotonNetwork.PlayerList[0].ActorNumber;
         }
-
-        //GetComponent<PhotonView>().TransferOwnership()
-        //PlayablePuzzle CurrentSelectedPuzzle = null;
 
         GetComponent<PhotonView>().RPC("ClientPassTheBox", RpcTarget.AllViaServer, QuizzedPlayerNumber);
     }
@@ -103,5 +108,24 @@ public class PuzzleManager : MonoBehaviour
             Camera.main.cullingMask = ClueMask;
             HelpText.text = "You are helping the player. They control the box!";
         }
+    }
+
+    public Animation GameOverAnimation,CameraAnimation;
+    [PunRPC]
+    public void GameOver()
+    {
+        Debug.LogWarning("Congrats the game has been won");
+
+        HelpText.text = "";
+
+        GameOverAnimation.Play();
+        CameraAnimation.Play();
+        FindObjectOfType<NetworkGameManager>().InfoText.text = "You have solved the puzzles and escaped the island!";
+        Invoke("LeaveMatch", GameOverAnimation.clip.length);
+    }
+
+    void LeaveMatch()
+    {
+        PhotonNetwork.LeaveRoom();
     }
 }

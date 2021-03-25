@@ -88,7 +88,7 @@ public class NetworkGameManager : MonoBehaviourPunCallbacks
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        //CheckEndOfGame();
+        //CheckEndOfGame(); todo return to menu if player left or pass the box if they were playing
     }
 
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)

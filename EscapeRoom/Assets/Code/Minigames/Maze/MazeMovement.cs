@@ -8,7 +8,7 @@ public class MazeMovement : MonoBehaviour
     public string Button;
     public Transform movePoint;
     public LayerMask Collision;
-
+    public AudioSource MoveClickSound;
 
     public void Update()
     {
@@ -24,6 +24,8 @@ public class MazeMovement : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0)) 
         {
+            MoveClickSound.Play();
+
             if (Button == "Left") 
             {
                 if (!Physics2D.OverlapCircle(movePoint.position + new Vector3(Distance, 0, 0),CircleCollider,Collision))

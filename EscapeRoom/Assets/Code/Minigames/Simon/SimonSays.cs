@@ -116,10 +116,10 @@ public class SimonSays : MonoBehaviour
     [PunRPC]
     public void CompletePuzzleAllClients_SimonSays()
     {        
-        Invoke("PassTheBox", 1);
+        Invoke("PassTheBox_Simon", 1);
     }
 
-    private void PassTheBox()
+    private void PassTheBox_Simon()
     {
         EndPuzzleEvent.Invoke();
         if (PhotonNetwork.IsMasterClient)
